@@ -24,7 +24,7 @@ uvx copier copy gh:<seu-usuario>/python-template-project meu-novo-projeto
 ```
 
 Responda as perguntas (nome do projeto, versão do Python/Node, porta dos serviços, licença, etc.)
-e o projeto será gerado em `meu-novo-projeto/` já pronto para `make setup && make dev`.
+e o projeto será gerado em `meu-novo-projeto/` já pronto para `just setup && just dev`.
 
 ### Atualizando um projeto já gerado
 

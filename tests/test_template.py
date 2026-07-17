@@ -26,28 +26,17 @@ def _run(cmd: list[str], cwd: Path) -> None:
 
 
 @pytest.mark.slow
-def test_generated_backend_passes_quality_gates(tmp_path: Path) -> None:
+def test_generated_project_passes_quality_gates_via_just(tmp_path: Path) -> None:
     dst = tmp_path / "generated"
     _generate(dst)
 
-    backend = dst / "backend"
-    _run(["uv", "sync"], cwd=backend)
-    _run(["uv", "run", "ruff", "check", "."], cwd=backend)
-    _run(["uv", "run", "ruff", "format", "--check", "."], cwd=backend)
-    _run(["uv", "run", "pyright"], cwd=backend)
-    _run(["uv", "run", "lint-imports"], cwd=backend)
-    _run(["uv", "run", "pytest"], cwd=backend)
-
-
-@pytest.mark.slow
-def test_generated_frontend_builds(tmp_path: Path) -> None:
-    dst = tmp_path / "generated"
-    _generate(dst)
-
-    frontend = dst / "frontend"
-    _run(["npm", "install"], cwd=frontend)
-    _run(["npm", "run", "lint"], cwd=frontend)
-    _run(["npm", "run", "build"], cwd=frontend)
+    _run(["just", "setup"], cwd=dst)
+    _run(["just", "lint"], cwd=dst)
+    _run(["just", "typecheck"], cwd=dst)
+    _run(["just", "check-arch"], cwd=dst)
+    _run(["just", "coverage"], cwd=dst)
+    _run(["npm", "run", "build"], cwd=dst / "frontend")
+    _run(["just", "clean"], cwd=dst)
 
 
 def test_generation_with_no_license_and_no_ci(tmp_path: Path) -> None:

@@ -17,8 +17,8 @@ _message_after_copy: |
   Próximos passos:
     cd {{ _copier_conf.dst_path }}
     git init
-    make setup
-    make dev
+    just setup
+    just dev
 
 questions:
 

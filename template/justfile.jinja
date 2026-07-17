@@ -1,0 +1,72 @@
+set windows-shell := ["powershell.exe", "-NoProfile", "-Command"]
+
+default:
+    just --list
+
+setup: setup-env setup-backend setup-frontend
+
+[windows]
+setup-env:
+    if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+
+[unix]
+setup-env:
+    test -f .env || cp .env.example .env
+
+[working-directory('backend')]
+setup-backend:
+    uv sync
+
+[working-directory('frontend')]
+setup-frontend:
+    npm install
+
+dev:
+    docker compose up --build
+
+docker-up:
+    docker compose up --build -d
+
+docker-down:
+    docker compose down
+
+[working-directory('backend')]
+test:
+    uv run pytest
+
+[working-directory('backend')]
+coverage:
+    uv run pytest --cov --cov-report=term-missing --cov-fail-under={{ min_test_coverage }}
+
+lint: lint-backend lint-frontend
+
+[working-directory('backend')]
+lint-backend:
+    uv run ruff check .
+
+[working-directory('frontend')]
+lint-frontend:
+    npm run lint
+
+[working-directory('backend')]
+format:
+    uv run ruff format .
+
+[working-directory('backend')]
+typecheck:
+    uv run pyright
+
+[working-directory('backend')]
+check-arch:
+    uv run lint-imports
+
+pre-commit:
+    pre-commit run --all-files
+
+[windows]
+clean:
+    foreach ($p in @('backend/.pytest_cache','backend/.ruff_cache','backend/htmlcov','backend/.coverage','frontend/dist','frontend/node_modules')) { if (Test-Path $p) { Remove-Item -Recurse -Force $p } }
+
+[unix]
+clean:
+    rm -rf backend/.pytest_cache backend/.ruff_cache backend/htmlcov backend/.coverage frontend/dist frontend/node_modules

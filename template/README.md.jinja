@@ -25,14 +25,14 @@ Frontend em React + TypeScript (Vite) em `frontend/`.
 - Python {{ python_version }}
 - [uv](https://docs.astral.sh/uv/)
 - Node.js {{ node_version }}
+- [just](https://github.com/casey/just) (`winget install --id Casey.Just`, `choco install just` ou `brew install just`)
 - Docker e Docker Compose (opcional, para rodar tudo em containers)
 
 ## Começando
 
 ```bash
-cp .env.example .env
-make setup
-make dev          # sobe backend (http://localhost:{{ backend_port }}) e frontend (http://localhost:{{ frontend_port }}) via Docker Compose
+just setup
+just dev          # sobe backend (http://localhost:{{ backend_port }}) e frontend (http://localhost:{{ frontend_port }}) via Docker Compose
 ```
 
 Sem Docker:
@@ -46,13 +46,13 @@ cd frontend && npm run dev
 
 | Comando            | O que faz                                              |
 | ------------------ | ------------------------------------------------------- |
-| `make lint`         | Ruff (backend) + ESLint (frontend)                       |
-| `make format`       | Formata o backend com `ruff format`                      |
-| `make typecheck`    | Checagem de tipos do backend com Pyright                 |
-| `make check-arch`   | Valida as fronteiras entre camadas com import-linter      |
-| `make test`         | Roda a suíte de testes do backend (pytest)               |
-| `make coverage`     | Testes com cobertura (mínimo configurado: {{ min_test_coverage }}%) |
-| `make pre-commit`   | Roda todos os hooks de pre-commit                        |
+| `just lint`         | Ruff (backend) + ESLint (frontend)                       |
+| `just format`       | Formata o backend com `ruff format`                      |
+| `just typecheck`    | Checagem de tipos do backend com Pyright                 |
+| `just check-arch`   | Valida as fronteiras entre camadas com import-linter      |
+| `just test`         | Roda a suíte de testes do backend (pytest)               |
+| `just coverage`     | Testes com cobertura (mínimo configurado: {{ min_test_coverage }}%) |
+| `just pre-commit`   | Roda todos os hooks de pre-commit                        |
 
 ## Pre-commit
 
