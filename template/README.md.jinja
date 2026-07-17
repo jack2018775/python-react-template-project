@@ -54,6 +54,35 @@ cd frontend && npm run dev
 | `just coverage`     | Testes com cobertura (mínimo configurado: {{ min_test_coverage }}%) |
 | `just pre-commit`   | Roda todos os hooks de pre-commit                        |
 
+## Adicionando um novo módulo
+
+Este template também gera módulos seguindo a mesma arquitetura (útil para um ERP com vários
+domínios: financeiro, fiscal, comercial, estoque, etc.):
+
+```bash
+just new-module fiscal Fiscal
+```
+
+O primeiro argumento é o nome do módulo (snake_case, vira o nome das pastas) e o segundo é o
+nome da entidade principal (PascalCase). Isso cria, dentro de `backend/src/{{ package_name }}/`:
+
+```
+domain/fiscal/{entities.py, repository.py}
+application/fiscal/use_cases.py
+infrastructure/fiscal/memory_repository.py
+interfaces/http/fiscal.py
+```
+
+mais os testes correspondentes em `backend/tests/unit/fiscal/` e `backend/tests/integration/fiscal/`.
+
+Nenhuma edição manual é necessária: `interfaces/http/app.py` descobre e registra o Blueprint de
+cada módulo automaticamente. Depois de gerar, rode `just check-arch` e `just test` para validar
+que as fronteiras entre camadas continuam respeitadas.
+
+O repositório de implementação em `infrastructure/` começa em memória (`InMemory{Entidade}Repository`)
+— troque por Postgres/SQL/o que for quando o módulo evoluir, sem precisar tocar em `domain`
+nem `application`.
+
 ## Pre-commit
 
 ```bash

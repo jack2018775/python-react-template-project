@@ -46,3 +46,37 @@ def test_generation_with_no_license_and_no_ci(tmp_path: Path) -> None:
     assert not (dst / "LICENSE").exists()
     assert not (dst / ".github").exists()
     assert (dst / "README.md").exists()
+
+
+@pytest.mark.slow
+def test_new_module_coexists_and_passes_quality_gates(tmp_path: Path) -> None:
+    dst = tmp_path / "generated"
+    _generate(dst)
+
+    for module_name, entity_name in (("fiscal", "Fiscal"), ("comercial", "Comercial")):
+        copier.run_copy(
+            str(TEMPLATE_ROOT),
+            str(dst),
+            data={
+                "target": "new_module",
+                "package_name": "test_project",
+                "module_name": module_name,
+                "entity_name": entity_name,
+            },
+            defaults=True,
+            unsafe=True,
+            answers_file=Path(f".copier-answers.module-{module_name}.yml"),
+        )
+
+    package_dir = dst / "backend" / "src" / "test_project"
+    for module_name in ("fiscal", "comercial"):
+        assert (package_dir / "domain" / module_name / "entities.py").exists()
+        assert (package_dir / "interfaces" / "http" / f"{module_name}.py").exists()
+
+    # The main project's own answers file must survive untouched.
+    assert "target: new_project" in (dst / ".copier-answers.yml").read_text(encoding="utf-8")
+
+    _run(["just", "setup"], cwd=dst)
+    _run(["just", "check-arch"], cwd=dst)
+    _run(["just", "coverage"], cwd=dst)
+    _run(["just", "clean"], cwd=dst)

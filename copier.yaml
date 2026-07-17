@@ -1,5 +1,5 @@
 _min_copier_version: "9.4.0"
-_subdirectory: template
+_subdirectory: "{{ 'module_template' if target == 'new_module' else 'template' }}"
 _envops:
   trim_blocks: true
   lstrip_blocks: true
@@ -8,10 +8,22 @@ _envops:
 _exclude:
   - "**/.DS_Store"
   - "**/__pycache__"
-  - "{% if not use_github_actions %}.github{% endif %}"
-  - "{% if license == 'None' %}LICENSE{% endif %}"
+  - "{% if target == 'new_module' or not use_github_actions %}.github{% endif %}"
+  - "{% if target == 'new_module' or license == 'None' %}LICENSE{% endif %}"
 
 _message_after_copy: |
+  {% if target == 'new_module' -%}
+  Módulo "{{ module_name }}" criado com sucesso em {{ _copier_conf.dst_path }}/backend.
+
+  Arquivos gerados em domain/application/infrastructure/interfaces/tests para "{{ module_name }}".
+  Nenhuma edição manual é necessária: o blueprint é descoberto automaticamente por
+  interfaces/http/app.py.
+
+  Próximos passos:
+    cd {{ _copier_conf.dst_path }}
+    just check-arch
+    just test
+  {%- else -%}
   Projeto "{{ project_name }}" criado com sucesso em {{ _copier_conf.dst_path }}.
 
   Próximos passos:
@@ -19,23 +31,36 @@ _message_after_copy: |
     git init
     just setup
     just dev
+  {%- endif %}
 
 questions:
+
+target:
+  type: str
+  help: O que você quer gerar?
+  choices:
+    Um projeto novo (backend + frontend do zero): new_project
+    Um módulo dentro de um projeto já gerado por este template: new_module
+  default: new_project
 
 project_name:
   type: str
   help: Nome do projeto (legível por humanos)
   default: My Project
+  when: "{{ target == 'new_project' }}"
 
 project_slug:
   type: str
   help: Slug do projeto (kebab-case), usado no repositório e no docker-compose
   default: "{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
+  when: "{{ target == 'new_project' }}"
 
 package_name:
   type: str
-  help: Nome do pacote Python (snake_case, importável)
-  default: "{{ project_slug.replace('-', '_') }}"
+  help: >-
+    {{ "Nome do pacote Python (snake_case, importável)" if target == "new_project" else
+    "Nome do pacote Python do backend já existente (o mesmo respondido ao gerar o projeto)" }}
+  default: "{{ project_slug.replace('-', '_') if target == 'new_project' else '' }}"
   validator: >-
     {% if not package_name.isidentifier() or package_name != package_name.lower() %}
     package_name deve ser um identificador Python válido em snake_case
@@ -45,16 +70,19 @@ project_description:
   type: str
   help: Breve descrição do projeto
   default: A short description of the project.
+  when: "{{ target == 'new_project' }}"
 
 author_name:
   type: str
   help: Nome do autor ou organização
   default: Your Name
+  when: "{{ target == 'new_project' }}"
 
 author_email:
   type: str
   help: Email do autor
   default: you@example.com
+  when: "{{ target == 'new_project' }}"
 
 python_version:
   type: str
@@ -64,6 +92,7 @@ python_version:
     - "3.12"
     - "3.13"
   default: "3.12"
+  when: "{{ target == 'new_project' }}"
 
 node_version:
   type: str
@@ -72,6 +101,7 @@ node_version:
     - "20"
     - "22"
   default: "20"
+  when: "{{ target == 'new_project' }}"
 
 license:
   type: str
@@ -82,23 +112,55 @@ license:
     - Proprietary
     - "None"
   default: MIT
+  when: "{{ target == 'new_project' }}"
 
 min_test_coverage:
   type: int
   help: Cobertura mínima de testes exigida (%) para o backend
   default: 80
+  when: "{{ target == 'new_project' }}"
 
 backend_port:
   type: int
   help: Porta do backend (Flask) exposta no host
   default: 8000
+  when: "{{ target == 'new_project' }}"
 
 frontend_port:
   type: int
   help: Porta do frontend (Vite dev server) exposta no host
   default: 5173
+  when: "{{ target == 'new_project' }}"
 
 use_github_actions:
   type: bool
   help: Incluir workflow de CI no GitHub Actions?
   default: true
+  when: "{{ target == 'new_project' }}"
+
+template_repo_url:
+  type: str
+  help: >-
+    URL deste template (usado pelo `just new-module` para gerar módulos futuros;
+    só precisa mudar se você fizer um fork do template)
+  default: https://github.com/jack2018775/python-react-template-project.git
+  when: "{{ target == 'new_project' }}"
+
+module_name:
+  type: str
+  help: Nome do módulo/domínio a criar (snake_case), ex. financeiro, fiscal, comercial
+  when: "{{ target == 'new_module' }}"
+  validator: >-
+    {% if not module_name.isidentifier() or module_name != module_name.lower() %}
+    module_name deve ser um identificador Python válido em snake_case
+    {% endif %}
+
+entity_name:
+  type: str
+  help: Nome da entidade principal do módulo (PascalCase), ex. Lancamento, NotaFiscal, Pedido
+  default: "{{ (module_name.split('_') | map('capitalize') | join('')) if target == 'new_module' else '' }}"
+  when: "{{ target == 'new_module' }}"
+  validator: >-
+    {% if not entity_name.isidentifier() or not entity_name[0].isupper() %}
+    entity_name deve ser um identificador Python válido em PascalCase
+    {% endif %}

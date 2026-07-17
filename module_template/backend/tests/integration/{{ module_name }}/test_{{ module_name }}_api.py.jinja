@@ -1,0 +1,10 @@
+from flask.testing import FlaskClient
+
+
+def test_create_and_list_{{ module_name }}(client: FlaskClient) -> None:
+    create_response = client.post("/{{ module_name }}", json={"name": "Example"})
+    assert create_response.status_code == 201
+
+    list_response = client.get("/{{ module_name }}")
+    assert list_response.status_code == 200
+    assert len(list_response.get_json()) == 1

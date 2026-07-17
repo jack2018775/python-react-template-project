@@ -1,7 +1,23 @@
-from flask import Flask
+import importlib
+import pkgutil
+
+from flask import Blueprint, Flask
 
 from ...config import Settings
-from .health import health_bp
+
+
+def _discover_blueprints() -> list[Blueprint]:
+    assert __package__ is not None
+    package = importlib.import_module(__package__)
+    blueprints: list[Blueprint] = []
+
+    for module_info in pkgutil.iter_modules(package.__path__):
+        if module_info.name == "app":
+            continue
+        module = importlib.import_module(f"{__package__}.{module_info.name}")
+        blueprints.extend(value for value in vars(module).values() if isinstance(value, Blueprint))
+
+    return blueprints
 
 
 def create_app() -> Flask:
@@ -10,6 +26,7 @@ def create_app() -> Flask:
     app.config["SETTINGS"] = settings
     app.debug = settings.debug
 
-    app.register_blueprint(health_bp)
+    for blueprint in _discover_blueprints():
+        app.register_blueprint(blueprint)
 
     return app

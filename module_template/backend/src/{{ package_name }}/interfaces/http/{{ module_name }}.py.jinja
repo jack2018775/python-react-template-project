@@ -1,0 +1,20 @@
+from flask import Blueprint, jsonify, request
+
+from {{ package_name }}.application.{{ module_name }}.use_cases import Create{{ entity_name }}, List{{ entity_name }}s
+from {{ package_name }}.infrastructure.{{ module_name }}.memory_repository import InMemory{{ entity_name }}Repository
+
+{{ module_name }}_bp = Blueprint("{{ module_name }}", __name__)
+_repository = InMemory{{ entity_name }}Repository()
+
+
+@{{ module_name }}_bp.post("/{{ module_name }}")
+def create_{{ module_name }}_item():
+    data = request.get_json()
+    item = Create{{ entity_name }}(_repository).execute(name=data["name"])
+    return jsonify(id=str(item.id), name=item.name), 201
+
+
+@{{ module_name }}_bp.get("/{{ module_name }}")
+def list_{{ module_name }}_items():
+    items = List{{ entity_name }}s(_repository).execute()
+    return jsonify([{"id": str(i.id), "name": i.name} for i in items]), 200

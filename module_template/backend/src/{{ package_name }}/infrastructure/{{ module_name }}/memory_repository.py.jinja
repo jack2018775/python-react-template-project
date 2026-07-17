@@ -1,0 +1,17 @@
+from uuid import UUID
+
+from {{ package_name }}.domain.{{ module_name }}.entities import {{ entity_name }}
+
+
+class InMemory{{ entity_name }}Repository:
+    def __init__(self) -> None:
+        self._items: dict[UUID, {{ entity_name }}] = {}
+
+    def add(self, item: {{ entity_name }}) -> None:
+        self._items[item.id] = item
+
+    def list(self) -> list[{{ entity_name }}]:
+        return list(self._items.values())
+
+    def get(self, item_id: UUID) -> {{ entity_name }} | None:
+        return self._items.get(item_id)

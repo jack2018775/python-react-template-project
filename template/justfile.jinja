@@ -63,6 +63,10 @@ check-arch:
 pre-commit:
     pre-commit run --all-files
 
+# Gera um novo módulo (domain/application/infrastructure/interfaces/tests), ex.: just new-module fiscal Fiscal
+new-module module_name entity_name:
+    uvx copier copy --answers-file .copier-answers.module.yml --defaults --data target=new_module --data package_name={{ package_name }} --data module_name={% raw %}{{module_name}}{% endraw %} --data entity_name={% raw %}{{entity_name}}{% endraw %} {{ template_repo_url }} .
+
 [windows]
 clean:
     foreach ($p in @('backend/.pytest_cache','backend/.ruff_cache','backend/htmlcov','backend/.coverage','frontend/dist','frontend/node_modules')) { if (Test-Path $p) { Remove-Item -Recurse -Force $p } }

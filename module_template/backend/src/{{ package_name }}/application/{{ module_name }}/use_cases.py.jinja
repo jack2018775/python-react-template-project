@@ -1,0 +1,20 @@
+from {{ package_name }}.domain.{{ module_name }}.entities import {{ entity_name }}
+from {{ package_name }}.domain.{{ module_name }}.repository import {{ entity_name }}Repository
+
+
+class Create{{ entity_name }}:
+    def __init__(self, repository: {{ entity_name }}Repository) -> None:
+        self._repository = repository
+
+    def execute(self, name: str) -> {{ entity_name }}:
+        item = {{ entity_name }}(name=name)
+        self._repository.add(item)
+        return item
+
+
+class List{{ entity_name }}s:
+    def __init__(self, repository: {{ entity_name }}Repository) -> None:
+        self._repository = repository
+
+    def execute(self) -> list[{{ entity_name }}]:
+        return self._repository.list()
