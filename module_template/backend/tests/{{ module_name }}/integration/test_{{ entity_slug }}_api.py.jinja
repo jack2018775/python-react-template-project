@@ -18,3 +18,8 @@ def test_create_list_and_get_{{ module_name }}(client: FlaskClient) -> None:
 def test_get_{{ module_name }}_returns_404_when_not_found(client: FlaskClient) -> None:
     response = client.get("/{{ module_name }}/00000000-0000-0000-0000-000000000000")
     assert response.status_code == 404
+
+
+def test_create_{{ module_name }}_returns_400_when_name_is_missing(client: FlaskClient) -> None:
+    response = client.post("/{{ module_name }}", json={})
+    assert response.status_code == 400

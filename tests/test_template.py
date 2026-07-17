@@ -35,6 +35,7 @@ def test_generated_project_passes_quality_gates_via_just(tmp_path: Path) -> None
     _run(["just", "typecheck"], cwd=dst)
     _run(["just", "check-arch"], cwd=dst)
     _run(["just", "coverage"], cwd=dst)
+    _run(["just", "test-frontend"], cwd=dst)
     _run(["npm", "run", "build"], cwd=dst / "frontend")
     _run(["just", "clean"], cwd=dst)
 

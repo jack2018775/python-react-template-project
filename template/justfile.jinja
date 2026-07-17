@@ -30,9 +30,15 @@ docker-up:
 docker-down:
     docker compose down
 
+test: test-backend test-frontend
+
 [working-directory('backend')]
-test:
+test-backend:
     uv run pytest
+
+[working-directory('frontend')]
+test-frontend:
+    npm run test
 
 [working-directory('backend')]
 coverage:

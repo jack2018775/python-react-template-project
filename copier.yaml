@@ -247,6 +247,9 @@ exception_name:
   validator: >-
     {% if target == 'new_exception' and (not exception_name.isidentifier() or not exception_name[0].isupper()) %}
     exception_name deve ser um identificador Python válido em PascalCase
+    {% elif target == 'new_exception' and (exception_name.endswith('Error') or exception_name.endswith('Exception')) %}
+    Não inclua o sufixo "Error"/"Exception" — ele já é adicionado automaticamente
+    (informe "SaldoInsuficiente", não "SaldoInsuficienteError")
     {% endif %}
 
 # --- slugs (snake_case) computados a partir dos nomes PascalCase acima, usados nos

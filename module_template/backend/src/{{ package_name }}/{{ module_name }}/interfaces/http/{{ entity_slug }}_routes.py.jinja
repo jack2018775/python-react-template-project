@@ -22,8 +22,12 @@ _repository = InMemory{{ entity_name }}Repository()
 
 @{{ module_name }}_bp.post("/{{ module_name }}")
 def create_{{ module_name }}_item():
-    data = request.get_json()
-    item = Create{{ entity_name }}(_repository).execute(name=data["name"])
+    data = request.get_json(silent=True) or {}
+    name = data.get("name")
+    if not name:
+        return {"error": "name is required"}, 400
+
+    item = Create{{ entity_name }}(_repository).execute(name=name)
     return {"id": str(item.id), "name": item.name}, 201
 
 

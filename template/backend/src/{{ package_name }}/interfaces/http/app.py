@@ -2,6 +2,7 @@ import importlib
 import pkgutil
 
 from flask import Blueprint, Flask
+from flask_cors import CORS
 
 from ...config import Settings
 
@@ -44,6 +45,8 @@ def create_app() -> Flask:
     settings = Settings.from_env()
     app.config["SETTINGS"] = settings
     app.debug = settings.debug
+
+    CORS(app, origins=settings.cors_origins)
 
     for blueprint in _discover_blueprints():
         app.register_blueprint(blueprint)

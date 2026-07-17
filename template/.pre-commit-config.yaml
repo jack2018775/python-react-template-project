@@ -28,21 +28,21 @@ repos:
     hooks:
       - id: pyright
         name: pyright (backend)
-        entry: bash -c 'cd backend && uv run pyright'
+        entry: uv run --project backend pyright
         language: system
         files: ^backend/.*\.py$
         pass_filenames: false
 
       - id: import-linter
         name: import-linter (backend)
-        entry: bash -c 'cd backend && uv run lint-imports'
+        entry: uv run --project backend lint-imports --config backend/pyproject.toml
         language: system
         files: ^backend/.*\.py$
         pass_filenames: false
 
       - id: eslint
         name: eslint (frontend)
-        entry: bash -c 'cd frontend && npm run lint'
+        entry: npm --prefix frontend run lint
         language: system
         files: ^frontend/.*\.(ts|tsx|js|jsx)$
         pass_filenames: false
