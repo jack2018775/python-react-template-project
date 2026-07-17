@@ -80,31 +80,24 @@ exclude_lines = [
 [tool.importlinter]
 root_package = "{{ package_name }}"
 
+# Cada módulo de negócio (bounded context) sob src/{{ package_name }}/ tem suas próprias
+# camadas internas (domain/application/infrastructure/interfaces). Este contrato vale para
+# TODOS eles automaticamente — inclusive módulos criados depois com `just new-module` — sem
+# precisar editar este arquivo. Camadas são "opcionais" (entre parênteses) porque um container
+# como "shared" não tem essa subestrutura.
 [[tool.importlinter.contracts]]
-name = "Domain has no dependency on outer layers"
-type = "forbidden"
-source_modules = ["{{ package_name }}.domain"]
-forbidden_modules = [
-    "{{ package_name }}.application",
-    "{{ package_name }}.infrastructure",
-    "{{ package_name }}.interfaces",
-]
-
-[[tool.importlinter.contracts]]
-name = "Application has no dependency on infrastructure or interfaces"
-type = "forbidden"
-source_modules = ["{{ package_name }}.application"]
-forbidden_modules = [
-    "{{ package_name }}.infrastructure",
-    "{{ package_name }}.interfaces",
-]
-
-[[tool.importlinter.contracts]]
-name = "Layers are respected"
+name = "Cada módulo respeita suas próprias camadas (Clean Architecture)"
 type = "layers"
+containers = ["{{ package_name }}.*"]
 layers = [
-    "{{ package_name }}.interfaces",
-    "{{ package_name }}.infrastructure",
-    "{{ package_name }}.application",
-    "{{ package_name }}.domain",
+    "(interfaces)",
+    "(infrastructure)",
+    "(application)",
+    "(domain)",
 ]
+
+[[tool.importlinter.contracts]]
+name = "shared não depende de nenhum módulo de negócio"
+type = "forbidden"
+source_modules = ["{{ package_name }}.shared"]
+forbidden_modules = ["{{ package_name }}.*"]

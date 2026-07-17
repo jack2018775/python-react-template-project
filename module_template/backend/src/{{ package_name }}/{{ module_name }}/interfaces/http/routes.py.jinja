@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
-from {{ package_name }}.application.{{ module_name }}.use_cases import Create{{ entity_name }}, List{{ entity_name }}s
-from {{ package_name }}.infrastructure.{{ module_name }}.memory_repository import InMemory{{ entity_name }}Repository
+from {{ package_name }}.{{ module_name }}.application.use_cases import Create{{ entity_name }}, List{{ entity_name }}s
+from {{ package_name }}.{{ module_name }}.infrastructure.memory_repository import InMemory{{ entity_name }}Repository
 
 {{ module_name }}_bp = Blueprint("{{ module_name }}", __name__)
 _repository = InMemory{{ entity_name }}Repository()

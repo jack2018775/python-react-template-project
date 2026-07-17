@@ -4,19 +4,40 @@
 
 ## Arquitetura
 
-Backend em Flask seguindo **Clean Architecture** + **Domain-Driven Design**:
+Backend em Flask organizado **por módulo de negócio primeiro, por camada depois** — pensado para
+projetos com muitos domínios (ex.: um ERP):
 
 ```
 backend/src/{{ package_name }}/
-├── domain/           # Entidades, value objects, regras de negócio puras (sem dependências externas)
-├── application/      # Casos de uso / serviços de aplicação (orquestram o domínio)
-├── infrastructure/   # Implementações concretas (repositórios, clients externos, persistência)
-└── interfaces/       # Camada de entrada (HTTP/Flask, CLI, etc.)
+├── financeiro/
+│   ├── domain/           # Entidades, value objects, regras de negócio puras
+│   ├── application/      # Casos de uso (orquestram o domínio)
+│   ├── infrastructure/   # Implementações concretas (repositórios, clients externos)
+│   └── interfaces/http/  # Blueprint Flask do módulo
+├── fiscal/
+│   └── ...                (mesma estrutura)
+├── shared/                # Código realmente compartilhado entre módulos (kernel comum)
+├── interfaces/http/       # app.py (bootstrap) e endpoints que não pertencem a um módulo (ex.: /health)
+├── config.py
+└── main.py
 ```
 
-A dependência entre camadas é unidirecional (`interfaces -> infrastructure -> application -> domain`)
-e é verificada automaticamente pelo [import-linter](https://import-linter.readthedocs.io/) — veja
-`[tool.importlinter]` em `backend/pyproject.toml`.
+Cada módulo é autônomo: só ele conhece suas próprias camadas. Dois contratos do
+[import-linter](https://import-linter.readthedocs.io/) (`backend/pyproject.toml`) já valem para
+**qualquer** módulo automaticamente, inclusive os criados depois com `just new-module`, sem editar
+nada:
+
+1. cada módulo respeita sua própria ordem de camadas (`interfaces -> infrastructure -> application -> domain`);
+2. `shared/` nunca depende de nenhum módulo de negócio (só o caminho inverso é permitido).
+
+O que o import-linter **não** verifica automaticamente: um módulo importar outro diretamente
+(ex.: `fiscal` importar `comercial`). Isso é responsabilidade de convenção/revisão de código — a
+regra é **só `shared/` é importado entre módulos**; se dois módulos precisam trocar dados, prefira
+eventos, uma interface em `shared/`, ou orquestração na camada de `interfaces/` em vez de import
+direto entre domínios.
+
+Se um módulo crescer muito, evolua submódulos dentro dele (`financeiro/contas_receber/`,
+`financeiro/pix/`) sem afetar os demais.
 
 Frontend em React + TypeScript (Vite) em `frontend/`.
 
@@ -63,17 +84,20 @@ domínios: financeiro, fiscal, comercial, estoque, etc.):
 just new-module fiscal Fiscal
 ```
 
-O primeiro argumento é o nome do módulo (snake_case, vira o nome das pastas) e o segundo é o
-nome da entidade principal (PascalCase). Isso cria, dentro de `backend/src/{{ package_name }}/`:
+O primeiro argumento é o nome do módulo (snake_case, vira o nome da pasta) e o segundo é o nome
+da entidade principal (PascalCase). Isso cria um bounded context completo e autônomo:
 
 ```
-domain/fiscal/{entities.py, repository.py}
-application/fiscal/use_cases.py
-infrastructure/fiscal/memory_repository.py
-interfaces/http/fiscal.py
-```
+backend/src/{{ package_name }}/fiscal/
+├── domain/{entities.py, repository.py}
+├── application/use_cases.py
+├── infrastructure/memory_repository.py
+└── interfaces/http/routes.py
 
-mais os testes correspondentes em `backend/tests/unit/fiscal/` e `backend/tests/integration/fiscal/`.
+backend/tests/fiscal/
+├── unit/test_fiscal_use_cases.py
+└── integration/test_fiscal_api.py
+```
 
 Nenhuma edição manual é necessária: `interfaces/http/app.py` descobre e registra o Blueprint de
 cada módulo automaticamente. Depois de gerar, rode `just check-arch` e `just test` para validar
@@ -81,7 +105,8 @@ que as fronteiras entre camadas continuam respeitadas.
 
 O repositório de implementação em `infrastructure/` começa em memória (`InMemory{Entidade}Repository`)
 — troque por Postgres/SQL/o que for quando o módulo evoluir, sem precisar tocar em `domain`
-nem `application`.
+nem `application`. Só coloque código em `shared/` quando ele for **realmente** usado por mais de
+um módulo — cada módulo deve poder evoluir sozinho.
 
 ## Pre-commit
 

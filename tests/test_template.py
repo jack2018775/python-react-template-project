@@ -70,8 +70,8 @@ def test_new_module_coexists_and_passes_quality_gates(tmp_path: Path) -> None:
 
     package_dir = dst / "backend" / "src" / "test_project"
     for module_name in ("fiscal", "comercial"):
-        assert (package_dir / "domain" / module_name / "entities.py").exists()
-        assert (package_dir / "interfaces" / "http" / f"{module_name}.py").exists()
+        assert (package_dir / module_name / "domain" / "entities.py").exists()
+        assert (package_dir / module_name / "interfaces" / "http" / "routes.py").exists()
 
     # The main project's own answers file must survive untouched.
     assert "target: new_project" in (dst / ".copier-answers.yml").read_text(encoding="utf-8")

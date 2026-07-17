@@ -1,5 +1,5 @@
-from {{ package_name }}.application.{{ module_name }}.use_cases import Create{{ entity_name }}, List{{ entity_name }}s
-from {{ package_name }}.infrastructure.{{ module_name }}.memory_repository import InMemory{{ entity_name }}Repository
+from {{ package_name }}.{{ module_name }}.application.use_cases import Create{{ entity_name }}, List{{ entity_name }}s
+from {{ package_name }}.{{ module_name }}.infrastructure.memory_repository import InMemory{{ entity_name }}Repository
 
 
 def test_create_and_list() -> None:

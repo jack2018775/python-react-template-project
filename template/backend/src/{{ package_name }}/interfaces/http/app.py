@@ -5,17 +5,36 @@ from flask import Blueprint, Flask
 
 from ...config import Settings
 
+_EXCLUDED_TOP_LEVEL_PACKAGES = {"shared"}
+
+
+def _blueprints_in(http_package_name: str) -> list[Blueprint]:
+    try:
+        http_package = importlib.import_module(http_package_name)
+    except ModuleNotFoundError:
+        return []
+
+    blueprints: list[Blueprint] = []
+    for module_info in pkgutil.iter_modules(http_package.__path__):
+        if module_info.name == "app":
+            continue
+        module = importlib.import_module(f"{http_package_name}.{module_info.name}")
+        blueprints.extend(value for value in vars(module).values() if isinstance(value, Blueprint))
+
+    return blueprints
+
 
 def _discover_blueprints() -> list[Blueprint]:
     assert __package__ is not None
-    package = importlib.import_module(__package__)
-    blueprints: list[Blueprint] = []
+    root_package_name = __package__.removesuffix(".interfaces.http")
+    root_package = importlib.import_module(root_package_name)
 
-    for module_info in pkgutil.iter_modules(package.__path__):
-        if module_info.name == "app":
+    blueprints = _blueprints_in(f"{root_package_name}.interfaces.http")
+
+    for module_info in pkgutil.iter_modules(root_package.__path__):
+        if not module_info.ispkg or module_info.name in _EXCLUDED_TOP_LEVEL_PACKAGES:
             continue
-        module = importlib.import_module(f"{__package__}.{module_info.name}")
-        blueprints.extend(value for value in vars(module).values() if isinstance(value, Blueprint))
+        blueprints.extend(_blueprints_in(f"{root_package_name}.{module_info.name}.interfaces.http"))
 
     return blueprints
 
