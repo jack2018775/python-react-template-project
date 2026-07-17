@@ -70,7 +70,15 @@ def test_new_module_coexists_and_passes_quality_gates(tmp_path: Path) -> None:
 
     package_dir = dst / "backend" / "src" / "test_project"
     for module_name in ("fiscal", "comercial"):
-        assert (package_dir / module_name / "domain" / "entities.py").exists()
+        assert (package_dir / module_name / "domain" / "entities" / "__init__.py").exists()
+        assert (package_dir / module_name / "domain" / "value_objects" / "__init__.py").exists()
+        assert (package_dir / module_name / "domain" / "repositories" / "__init__.py").exists()
+        assert (package_dir / module_name / "domain" / "services" / "__init__.py").exists()
+        assert (package_dir / module_name / "domain" / "events" / "__init__.py").exists()
+        assert (package_dir / module_name / "domain" / "exceptions.py").exists()
+        assert (package_dir / module_name / "application" / "commands" / "__init__.py").exists()
+        assert (package_dir / module_name / "application" / "queries" / "__init__.py").exists()
+        assert (package_dir / module_name / "infrastructure" / "persistence" / "__init__.py").exists()
         assert (package_dir / module_name / "interfaces" / "http" / "routes.py").exists()
 
     # The main project's own answers file must survive untouched.

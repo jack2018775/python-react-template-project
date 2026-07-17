@@ -1,0 +1,24 @@
+from uuid import UUID
+
+from {{ package_name }}.{{ module_name }}.domain.entities import {{ entity_name }}
+from {{ package_name }}.{{ module_name }}.domain.exceptions import {{ entity_name }}NotFoundError
+from {{ package_name }}.{{ module_name }}.domain.repositories import {{ entity_name }}Repository
+
+
+class List{{ entity_name }}s:
+    def __init__(self, repository: {{ entity_name }}Repository) -> None:
+        self._repository = repository
+
+    def execute(self) -> list[{{ entity_name }}]:
+        return self._repository.list()
+
+
+class Get{{ entity_name }}:
+    def __init__(self, repository: {{ entity_name }}Repository) -> None:
+        self._repository = repository
+
+    def execute(self, item_id: UUID) -> {{ entity_name }}:
+        item = self._repository.get(item_id)
+        if item is None:
+            raise {{ entity_name }}NotFoundError(str(item_id))
+        return item

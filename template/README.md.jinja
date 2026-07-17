@@ -10,14 +10,23 @@ projetos com muitos domínios (ex.: um ERP):
 ```
 backend/src/{{ package_name }}/
 ├── financeiro/
-│   ├── domain/           # Entidades, value objects, regras de negócio puras
-│   ├── application/      # Casos de uso (orquestram o domínio)
-│   ├── infrastructure/   # Implementações concretas (repositórios, clients externos)
-│   └── interfaces/http/  # Blueprint Flask do módulo
+│   ├── domain/
+│   │   ├── entities/          # Entidades (regras de negócio puras)
+│   │   ├── value_objects/     # Value objects
+│   │   ├── repositories/      # Interfaces (Protocol) dos repositórios
+│   │   ├── services/          # Domain services
+│   │   ├── events/            # Eventos de domínio
+│   │   └── exceptions.py
+│   ├── application/
+│   │   ├── commands/          # Casos de uso que escrevem (CQRS)
+│   │   └── queries/           # Casos de uso que leem (CQRS)
+│   ├── infrastructure/
+│   │   └── persistence/       # Implementações concretas dos repositórios
+│   └── interfaces/http/       # Blueprint Flask do módulo
 ├── fiscal/
-│   └── ...                (mesma estrutura)
-├── shared/                # Código realmente compartilhado entre módulos (kernel comum)
-├── interfaces/http/       # app.py (bootstrap) e endpoints que não pertencem a um módulo (ex.: /health)
+│   └── ...                     (mesma estrutura)
+├── shared/                     # Código realmente compartilhado entre módulos (kernel comum)
+├── interfaces/http/            # app.py (bootstrap) e endpoints sem módulo dono (ex.: /health)
 ├── config.py
 └── main.py
 ```
@@ -89,10 +98,20 @@ da entidade principal (PascalCase). Isso cria um bounded context completo e aut�
 
 ```
 backend/src/{{ package_name }}/fiscal/
-├── domain/{entities.py, repository.py}
-├── application/use_cases.py
-├── infrastructure/memory_repository.py
-└── interfaces/http/routes.py
+├── domain/
+│   ├── entities/           # Fiscal (dataclass)
+│   ├── value_objects/      # vazio — para os VOs do módulo
+│   ├── repositories/       # FiscalRepository (Protocol)
+│   ├── services/           # vazio — para domain services
+│   ├── events/             # vazio — para eventos de domínio
+│   └── exceptions.py       # FiscalNotFoundError
+├── application/
+│   ├── commands/           # CreateFiscal
+│   └── queries/            # ListFiscals, GetFiscal
+├── infrastructure/
+│   └── persistence/        # InMemoryFiscalRepository
+└── interfaces/http/
+    └── routes.py           # Blueprint com POST/GET /fiscal e GET /fiscal/<id>
 
 backend/tests/fiscal/
 ├── unit/test_fiscal_use_cases.py

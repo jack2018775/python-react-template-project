@@ -1,5 +1,11 @@
-from {{ package_name }}.{{ module_name }}.application.use_cases import Create{{ entity_name }}, List{{ entity_name }}s
-from {{ package_name }}.{{ module_name }}.infrastructure.memory_repository import InMemory{{ entity_name }}Repository
+from uuid import uuid4
+
+import pytest
+
+from {{ package_name }}.{{ module_name }}.application.commands import Create{{ entity_name }}
+from {{ package_name }}.{{ module_name }}.application.queries import Get{{ entity_name }}, List{{ entity_name }}s
+from {{ package_name }}.{{ module_name }}.domain.exceptions import {{ entity_name }}NotFoundError
+from {{ package_name }}.{{ module_name }}.infrastructure.persistence import InMemory{{ entity_name }}Repository
 
 
 def test_create_and_list() -> None:
@@ -9,3 +15,10 @@ def test_create_and_list() -> None:
     items = List{{ entity_name }}s(repository).execute()
 
     assert items == [created]
+
+
+def test_get_raises_when_not_found() -> None:
+    repository = InMemory{{ entity_name }}Repository()
+
+    with pytest.raises({{ entity_name }}NotFoundError):
+        Get{{ entity_name }}(repository).execute(uuid4())

@@ -1,5 +1,5 @@
 from {{ package_name }}.{{ module_name }}.domain.entities import {{ entity_name }}
-from {{ package_name }}.{{ module_name }}.domain.repository import {{ entity_name }}Repository
+from {{ package_name }}.{{ module_name }}.domain.repositories import {{ entity_name }}Repository
 
 
 class Create{{ entity_name }}:
@@ -10,11 +10,3 @@ class Create{{ entity_name }}:
         item = {{ entity_name }}(name=name)
         self._repository.add(item)
         return item
-
-
-class List{{ entity_name }}s:
-    def __init__(self, repository: {{ entity_name }}Repository) -> None:
-        self._repository = repository
-
-    def execute(self) -> list[{{ entity_name }}]:
-        return self._repository.list()
