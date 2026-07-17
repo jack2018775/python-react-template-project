@@ -1,0 +1,35 @@
+FROM python:{{ python_version }}-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_LINK_MODE=copy
+
+RUN pip install --no-cache-dir uv
+
+WORKDIR /app
+
+
+FROM base AS dev
+
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --no-install-project
+
+COPY . .
+RUN uv sync
+
+EXPOSE 8000
+
+CMD ["uv", "run", "flask", "--app", "{{ package_name }}.interfaces.http.app:create_app", "run", "--host=0.0.0.0", "--port=8000", "--reload"]
+
+
+FROM base AS production
+
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --no-install-project --no-dev
+
+COPY . .
+RUN uv sync --no-dev
+
+EXPOSE 8000
+
+CMD ["uv", "run", "gunicorn", "--factory", "{{ package_name }}.interfaces.http.app:create_app", "-b", "0.0.0.0:8000"]

@@ -1,0 +1,104 @@
+_min_copier_version: "9.4.0"
+_subdirectory: template
+_envops:
+  trim_blocks: true
+  lstrip_blocks: true
+  keep_trailing_newline: true
+
+_exclude:
+  - "**/.DS_Store"
+  - "**/__pycache__"
+  - "{% if not use_github_actions %}.github{% endif %}"
+  - "{% if license == 'None' %}LICENSE{% endif %}"
+
+_message_after_copy: |
+  Projeto "{{ project_name }}" criado com sucesso em {{ _copier_conf.dst_path }}.
+
+  Próximos passos:
+    cd {{ _copier_conf.dst_path }}
+    git init
+    make setup
+    make dev
+
+questions:
+
+project_name:
+  type: str
+  help: Nome do projeto (legível por humanos)
+  default: My Project
+
+project_slug:
+  type: str
+  help: Slug do projeto (kebab-case), usado no repositório e no docker-compose
+  default: "{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
+
+package_name:
+  type: str
+  help: Nome do pacote Python (snake_case, importável)
+  default: "{{ project_slug.replace('-', '_') }}"
+  validator: >-
+    {% if not package_name.isidentifier() or package_name != package_name.lower() %}
+    package_name deve ser um identificador Python válido em snake_case
+    {% endif %}
+
+project_description:
+  type: str
+  help: Breve descrição do projeto
+  default: A short description of the project.
+
+author_name:
+  type: str
+  help: Nome do autor ou organização
+  default: Your Name
+
+author_email:
+  type: str
+  help: Email do autor
+  default: you@example.com
+
+python_version:
+  type: str
+  help: Versão do Python
+  choices:
+    - "3.11"
+    - "3.12"
+    - "3.13"
+  default: "3.12"
+
+node_version:
+  type: str
+  help: Versão do Node.js (frontend)
+  choices:
+    - "20"
+    - "22"
+  default: "20"
+
+license:
+  type: str
+  help: Licença do projeto
+  choices:
+    - MIT
+    - Apache-2.0
+    - Proprietary
+    - "None"
+  default: MIT
+
+min_test_coverage:
+  type: int
+  help: Cobertura mínima de testes exigida (%) para o backend
+  default: 80
+
+backend_port:
+  type: int
+  help: Porta do backend (Flask) exposta no host
+  default: 8000
+
+frontend_port:
+  type: int
+  help: Porta do frontend (Vite dev server) exposta no host
+  default: 5173
+
+use_github_actions:
+  type: bool
+  help: Incluir workflow de CI no GitHub Actions?
+  default: true

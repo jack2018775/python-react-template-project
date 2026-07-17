@@ -1,0 +1,76 @@
+# {{ project_name }}
+
+{{ project_description }}
+
+## Arquitetura
+
+Backend em Flask seguindo **Clean Architecture** + **Domain-Driven Design**:
+
+```
+backend/src/{{ package_name }}/
+├── domain/           # Entidades, value objects, regras de negócio puras (sem dependências externas)
+├── application/      # Casos de uso / serviços de aplicação (orquestram o domínio)
+├── infrastructure/   # Implementações concretas (repositórios, clients externos, persistência)
+└── interfaces/       # Camada de entrada (HTTP/Flask, CLI, etc.)
+```
+
+A dependência entre camadas é unidirecional (`interfaces -> infrastructure -> application -> domain`)
+e é verificada automaticamente pelo [import-linter](https://import-linter.readthedocs.io/) — veja
+`[tool.importlinter]` em `backend/pyproject.toml`.
+
+Frontend em React + TypeScript (Vite) em `frontend/`.
+
+## Requisitos
+
+- Python {{ python_version }}
+- [uv](https://docs.astral.sh/uv/)
+- Node.js {{ node_version }}
+- Docker e Docker Compose (opcional, para rodar tudo em containers)
+
+## Começando
+
+```bash
+cp .env.example .env
+make setup
+make dev          # sobe backend (http://localhost:{{ backend_port }}) e frontend (http://localhost:{{ frontend_port }}) via Docker Compose
+```
+
+Sem Docker:
+
+```bash
+cd backend && uv run flask --app {{ package_name }}.interfaces.http.app:create_app run --reload
+cd frontend && npm run dev
+```
+
+## Qualidade de código
+
+| Comando            | O que faz                                              |
+| ------------------ | ------------------------------------------------------- |
+| `make lint`         | Ruff (backend) + ESLint (frontend)                       |
+| `make format`       | Formata o backend com `ruff format`                      |
+| `make typecheck`    | Checagem de tipos do backend com Pyright                 |
+| `make check-arch`   | Valida as fronteiras entre camadas com import-linter      |
+| `make test`         | Roda a suíte de testes do backend (pytest)               |
+| `make coverage`     | Testes com cobertura (mínimo configurado: {{ min_test_coverage }}%) |
+| `make pre-commit`   | Roda todos os hooks de pre-commit                        |
+
+## Pre-commit
+
+```bash
+uv tool install pre-commit
+pre-commit install
+```
+
+## CI
+
+{% if use_github_actions -%}
+O workflow em `.github/workflows/ci.yml` roda lint, typecheck, import-linter, testes com cobertura
+(backend) e lint, typecheck e build (frontend) a cada push/PR.
+{% else -%}
+Nenhum workflow de CI foi incluído. Adicione o seu conforme a necessidade.
+{% endif %}
+{% if license != "None" %}
+## Licença
+
+{{ license }} — veja [LICENSE](LICENSE).
+{% endif %}

@@ -1,0 +1,41 @@
+.PHONY: setup dev test lint format typecheck check-arch coverage docker-up docker-down clean
+
+setup:
+	test -f .env || cp .env.example .env
+	cd backend && uv sync
+	cd frontend && npm install
+
+dev:
+	docker compose up --build
+
+docker-up:
+	docker compose up --build -d
+
+docker-down:
+	docker compose down
+
+test:
+	cd backend && uv run pytest
+
+coverage:
+	cd backend && uv run pytest --cov --cov-report=term-missing --cov-fail-under={{ min_test_coverage }}
+
+lint:
+	cd backend && uv run ruff check .
+	cd frontend && npm run lint
+
+format:
+	cd backend && uv run ruff format .
+
+typecheck:
+	cd backend && uv run pyright
+
+check-arch:
+	cd backend && uv run lint-imports
+
+pre-commit:
+	uv run pre-commit run --all-files
+
+clean:
+	rm -rf backend/.pytest_cache backend/.ruff_cache backend/htmlcov backend/.coverage
+	rm -rf frontend/dist frontend/node_modules

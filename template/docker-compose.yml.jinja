@@ -1,0 +1,41 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    env_file:
+      - .env
+    environment:
+      - FLASK_DEBUG=1
+      - FLASK_APP={{ package_name }}.interfaces.http.app:create_app
+    ports:
+      - "{{ backend_port }}:8000"
+    volumes:
+      - ./backend:/app
+    command:
+      [
+        "uv",
+        "run",
+        "flask",
+        "--app",
+        "{{ package_name }}.interfaces.http.app:create_app",
+        "run",
+        "--host=0.0.0.0",
+        "--port=8000",
+        "--reload",
+      ]
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    env_file:
+      - .env
+    ports:
+      - "{{ frontend_port }}:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev", "--", "--host"]
+    depends_on:
+      - backend

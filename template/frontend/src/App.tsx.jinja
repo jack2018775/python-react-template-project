@@ -1,0 +1,27 @@
+import { useEffect, useState } from "react";
+
+import "./App.css";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:{{ backend_port }}";
+
+function App() {
+  const [status, setStatus] = useState<string>("checking...");
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/health`)
+      .then((response) => response.json())
+      .then((data: { status: string }) => setStatus(data.status))
+      .catch(() => setStatus("unreachable"));
+  }, []);
+
+  return (
+    <main className="app">
+      <h1>{{ project_name }}</h1>
+      <p>
+        Backend status: <strong>{status}</strong>
+      </p>
+    </main>
+  );
+}
+
+export default App;
