@@ -1,0 +1,7 @@
+from {{ package_name }}.{{ module_name }}.domain.entities.{{ entity_slug }} import {{ entity_name }}
+
+
+def test_{{ entity_slug }}_has_a_name() -> None:
+    item = {{ entity_name }}(name="Example")
+
+    assert item.name == "Example"

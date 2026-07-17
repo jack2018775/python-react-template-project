@@ -1,0 +1,33 @@
+from uuid import uuid4
+
+import pytest
+
+from {{ package_name }}.{{ module_name }}.application.commands.create_{{ entity_slug }} import (
+    Create{{ entity_name }},
+)
+from {{ package_name }}.{{ module_name }}.application.queries.{{ entity_slug }}_queries import (
+    Get{{ entity_name }},
+    List{{ entity_name }}s,
+)
+from {{ package_name }}.{{ module_name }}.domain.exceptions.{{ entity_slug }}_not_found import (
+    {{ entity_name }}NotFoundError,
+)
+from {{ package_name }}.{{ module_name }}.infrastructure.persistence.in_memory_{{ entity_slug }}_repository import (
+    InMemory{{ entity_name }}Repository,
+)
+
+
+def test_create_and_list() -> None:
+    repository = InMemory{{ entity_name }}Repository()
+
+    created = Create{{ entity_name }}(repository).execute(name="Example")
+    items = List{{ entity_name }}s(repository).execute()
+
+    assert items == [created]
+
+
+def test_get_raises_when_not_found() -> None:
+    repository = InMemory{{ entity_name }}Repository()
+
+    with pytest.raises({{ entity_name }}NotFoundError):
+        Get{{ entity_name }}(repository).execute(uuid4())

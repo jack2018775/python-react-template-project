@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from {{ package_name }}.{{ module_name }}.domain.entities import {{ entity_name }}
+from {{ package_name }}.{{ module_name }}.domain.entities.{{ entity_slug }} import {{ entity_name }}
 
 
 class InMemory{{ entity_name }}Repository:

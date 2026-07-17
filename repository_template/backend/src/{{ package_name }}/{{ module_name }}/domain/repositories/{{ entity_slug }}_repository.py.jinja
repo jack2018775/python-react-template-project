@@ -1,0 +1,10 @@
+from typing import Protocol
+from uuid import UUID
+
+from {{ package_name }}.{{ module_name }}.domain.entities.{{ entity_slug }} import {{ entity_name }}
+
+
+class {{ entity_name }}Repository(Protocol):
+    def add(self, item: {{ entity_name }}) -> None: ...
+    def list(self) -> list[{{ entity_name }}]: ...
+    def get(self, item_id: UUID) -> {{ entity_name }} | None: ...

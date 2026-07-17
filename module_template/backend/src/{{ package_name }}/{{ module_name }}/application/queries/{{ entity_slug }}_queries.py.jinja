@@ -1,8 +1,12 @@
 from uuid import UUID
 
-from {{ package_name }}.{{ module_name }}.domain.entities import {{ entity_name }}
-from {{ package_name }}.{{ module_name }}.domain.exceptions import {{ entity_name }}NotFoundError
-from {{ package_name }}.{{ module_name }}.domain.repositories import {{ entity_name }}Repository
+from {{ package_name }}.{{ module_name }}.domain.entities.{{ entity_slug }} import {{ entity_name }}
+from {{ package_name }}.{{ module_name }}.domain.exceptions.{{ entity_slug }}_not_found import (
+    {{ entity_name }}NotFoundError,
+)
+from {{ package_name }}.{{ module_name }}.domain.repositories.{{ entity_slug }}_repository import (
+    {{ entity_name }}Repository,
+)
 
 
 class List{{ entity_name }}s:

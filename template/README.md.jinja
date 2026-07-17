@@ -84,48 +84,60 @@ cd frontend && npm run dev
 | `just coverage`     | Testes com cobertura (mínimo configurado: {{ min_test_coverage }}%) |
 | `just pre-commit`   | Roda todos os hooks de pre-commit                        |
 
-## Adicionando um novo módulo
+## Gerando módulos e artefatos
 
-Este template também gera módulos seguindo a mesma arquitetura (útil para um ERP com vários
-domínios: financeiro, fiscal, comercial, estoque, etc.):
+Este template também gera módulos e peças individuais de dentro deles, seguindo a mesma
+arquitetura (útil para um ERP com vários domínios: financeiro, fiscal, comercial, estoque, etc.).
+Nenhum desses comandos edita arquivos existentes — cada um só adiciona arquivos novos — e
+`interfaces/http/app.py` descobre e registra Blueprints automaticamente, sem passo manual.
 
-```bash
-just new-module fiscal Fiscal
-```
+| Comando                                                     | O que gera                                                    |
+| ------------------------------------------------------------ | -------------------------------------------------------------- |
+| `just new-module fiscal Fiscal`                               | Módulo completo e autônomo (bounded context)                    |
+| `just new-entity fiscal NotaFiscal`                            | Mais uma entidade no módulo                                     |
+| `just new-value-object fiscal Cpf`                             | Um value object (imutável, igualdade por valor)                 |
+| `just new-service fiscal CalculadoraDeImposto`                 | Um domain service                                               |
+| `just new-use-case fiscal AprovarPagamento command`            | Um caso de uso (`command` escreve, `query` só lê)                |
+| `just new-event fiscal NotaFiscalEmitida`                      | Um evento de domínio                                            |
+| `just new-exception fiscal SaldoInsuficiente`                  | Uma exceção de domínio                                          |
+| `just new-repository fiscal NotaFiscal`                        | Repositório (Protocol + implementação em memória) para a entidade |
 
-O primeiro argumento é o nome do módulo (snake_case, vira o nome da pasta) e o segundo é o nome
-da entidade principal (PascalCase). Isso cria um bounded context completo e autônomo:
+`just new-module fiscal Fiscal` cria um bounded context completo:
 
 ```
 backend/src/{{ package_name }}/fiscal/
 ├── domain/
-│   ├── entities/           # Fiscal (dataclass)
-│   ├── value_objects/      # vazio — para os VOs do módulo
-│   ├── repositories/       # FiscalRepository (Protocol)
-│   ├── services/           # vazio — para domain services
-│   ├── events/             # vazio — para eventos de domínio
-│   └── exceptions.py       # FiscalNotFoundError
+│   ├── entities/fiscal.py                       # Fiscal (dataclass)
+│   ├── value_objects/                            # vazio — para os VOs do módulo
+│   ├── repositories/fiscal_repository.py         # FiscalRepository (Protocol)
+│   ├── services/                                 # vazio — para domain services
+│   ├── events/                                    # vazio — para eventos de domínio
+│   └── exceptions/fiscal_not_found.py            # FiscalNotFoundError
 ├── application/
-│   ├── commands/           # CreateFiscal
-│   └── queries/            # ListFiscals, GetFiscal
+│   ├── commands/create_fiscal.py                 # CreateFiscal
+│   └── queries/fiscal_queries.py                 # ListFiscals, GetFiscal
 ├── infrastructure/
-│   └── persistence/        # InMemoryFiscalRepository
-└── interfaces/http/
-    └── routes.py           # Blueprint com POST/GET /fiscal e GET /fiscal/<id>
+│   └── persistence/in_memory_fiscal_repository.py  # InMemoryFiscalRepository
+└── interfaces/http/fiscal_routes.py              # Blueprint com POST/GET /fiscal e GET /fiscal/<id>
 
 backend/tests/fiscal/
 ├── unit/test_fiscal_use_cases.py
 └── integration/test_fiscal_api.py
 ```
 
-Nenhuma edição manual é necessária: `interfaces/http/app.py` descobre e registra o Blueprint de
-cada módulo automaticamente. Depois de gerar, rode `just check-arch` e `just test` para validar
-que as fronteiras entre camadas continuam respeitadas.
+Cada categoria (`entities/`, `value_objects/`, `repositories/`, `services/`, `events/`,
+`exceptions/`, `commands/`, `queries/`) é um pacote — um arquivo por item. Os comandos
+`new-entity`/`new-value-object`/`new-service`/`new-event`/`new-exception` adicionam mais um
+arquivo irmão dentro dessas pastas; `new-repository` gera o par Protocol + implementação em
+memória para uma entidade que já exista (criada por `new-module` ou `new-entity`).
 
-O repositório de implementação em `infrastructure/` começa em memória (`InMemory{Entidade}Repository`)
-— troque por Postgres/SQL/o que for quando o módulo evoluir, sem precisar tocar em `domain`
-nem `application`. Só coloque código em `shared/` quando ele for **realmente** usado por mais de
-um módulo — cada módulo deve poder evoluir sozinho.
+Depois de gerar, rode `just check-arch` e `just test` para validar que as fronteiras entre
+camadas continuam respeitadas.
+
+O repositório de implementação em `infrastructure/persistence/` começa em memória
+(`InMemory{Entidade}Repository`) — troque por Postgres/SQL/o que for quando o módulo evoluir, sem
+precisar tocar em `domain` nem `application`. Só coloque código em `shared/` quando ele for
+**realmente** usado por mais de um módulo — cada módulo deve poder evoluir sozinho.
 
 ## Pre-commit
 

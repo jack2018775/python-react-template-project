@@ -67,6 +67,34 @@ pre-commit:
 new-module module_name entity_name:
     uvx copier copy --answers-file .copier-answers.module.yml --defaults --data target=new_module --data package_name={{ package_name }} --data module_name={% raw %}{{module_name}}{% endraw %} --data entity_name={% raw %}{{entity_name}}{% endraw %} {{ template_repo_url }} .
 
+# Gera uma entidade em um módulo existente, ex.: just new-entity fiscal NotaFiscal
+new-entity module_name entity_name:
+    uvx copier copy --answers-file .copier-answers.module.yml --defaults --data target=new_entity --data package_name={{ package_name }} --data module_name={% raw %}{{module_name}}{% endraw %} --data entity_name={% raw %}{{entity_name}}{% endraw %} {{ template_repo_url }} .
+
+# Gera um value object em um módulo existente, ex.: just new-value-object fiscal Cpf
+new-value-object module_name value_object_name:
+    uvx copier copy --answers-file .copier-answers.module.yml --defaults --data target=new_value_object --data package_name={{ package_name }} --data module_name={% raw %}{{module_name}}{% endraw %} --data value_object_name={% raw %}{{value_object_name}}{% endraw %} {{ template_repo_url }} .
+
+# Gera um domain service em um módulo existente, ex.: just new-service fiscal CalculadoraDeImposto
+new-service module_name service_name:
+    uvx copier copy --answers-file .copier-answers.module.yml --defaults --data target=new_service --data package_name={{ package_name }} --data module_name={% raw %}{{module_name}}{% endraw %} --data service_name={% raw %}{{service_name}}{% endraw %} {{ template_repo_url }} .
+
+# Gera um caso de uso em um módulo existente, ex.: just new-use-case fiscal AprovarPagamento command
+new-use-case module_name use_case_name kind:
+    uvx copier copy --answers-file .copier-answers.module.yml --defaults --data target=new_use_case --data package_name={{ package_name }} --data module_name={% raw %}{{module_name}}{% endraw %} --data use_case_name={% raw %}{{use_case_name}}{% endraw %} --data use_case_kind={% raw %}{{kind}}{% endraw %} {{ template_repo_url }} .
+
+# Gera um evento de domínio em um módulo existente, ex.: just new-event fiscal NotaFiscalEmitida
+new-event module_name event_name:
+    uvx copier copy --answers-file .copier-answers.module.yml --defaults --data target=new_event --data package_name={{ package_name }} --data module_name={% raw %}{{module_name}}{% endraw %} --data event_name={% raw %}{{event_name}}{% endraw %} {{ template_repo_url }} .
+
+# Gera uma exceção de domínio em um módulo existente, ex.: just new-exception fiscal SaldoInsuficiente
+new-exception module_name exception_name:
+    uvx copier copy --answers-file .copier-answers.module.yml --defaults --data target=new_exception --data package_name={{ package_name }} --data module_name={% raw %}{{module_name}}{% endraw %} --data exception_name={% raw %}{{exception_name}}{% endraw %} {{ template_repo_url }} .
+
+# Gera um repositório (Protocol + implementação em memória) para uma entidade já existente, ex.: just new-repository fiscal NotaFiscal
+new-repository module_name entity_name:
+    uvx copier copy --answers-file .copier-answers.module.yml --defaults --data target=new_repository --data package_name={{ package_name }} --data module_name={% raw %}{{module_name}}{% endraw %} --data entity_name={% raw %}{{entity_name}}{% endraw %} {{ template_repo_url }} .
+
 [windows]
 clean:
     foreach ($p in @('backend/.pytest_cache','backend/.ruff_cache','backend/htmlcov','backend/.coverage','frontend/dist','frontend/node_modules')) { if (Test-Path $p) { Remove-Item -Recurse -Force $p } }

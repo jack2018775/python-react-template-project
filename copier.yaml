@@ -1,5 +1,15 @@
 _min_copier_version: "9.4.0"
-_subdirectory: "{{ 'module_template' if target == 'new_module' else 'template' }}"
+_subdirectory: >-
+  {%- if target == 'new_module' -%} module_template
+  {%- elif target == 'new_entity' -%} entity_template
+  {%- elif target == 'new_value_object' -%} value_object_template
+  {%- elif target == 'new_service' -%} service_template
+  {%- elif target == 'new_use_case' -%} use_case_template
+  {%- elif target == 'new_event' -%} event_template
+  {%- elif target == 'new_exception' -%} exception_template
+  {%- elif target == 'new_repository' -%} repository_template
+  {%- else -%} template
+  {%- endif -%}
 _envops:
   trim_blocks: true
   lstrip_blocks: true
@@ -8,22 +18,11 @@ _envops:
 _exclude:
   - "**/.DS_Store"
   - "**/__pycache__"
-  - "{% if target == 'new_module' or not use_github_actions %}.github{% endif %}"
-  - "{% if target == 'new_module' or license == 'None' %}LICENSE{% endif %}"
+  - "{% if target != 'new_project' or not use_github_actions %}.github{% endif %}"
+  - "{% if target != 'new_project' or license == 'None' %}LICENSE{% endif %}"
 
 _message_after_copy: |
-  {% if target == 'new_module' -%}
-  Módulo "{{ module_name }}" criado com sucesso em {{ _copier_conf.dst_path }}/backend.
-
-  Arquivos gerados em domain/application/infrastructure/interfaces/tests para "{{ module_name }}".
-  Nenhuma edição manual é necessária: o blueprint é descoberto automaticamente por
-  interfaces/http/app.py.
-
-  Próximos passos:
-    cd {{ _copier_conf.dst_path }}
-    just check-arch
-    just test
-  {%- else -%}
+  {% if target == 'new_project' -%}
   Projeto "{{ project_name }}" criado com sucesso em {{ _copier_conf.dst_path }}.
 
   Próximos passos:
@@ -31,6 +30,14 @@ _message_after_copy: |
     git init
     just setup
     just dev
+  {%- else -%}
+  Gerado com sucesso em {{ _copier_conf.dst_path }}/backend (módulo "{{ module_name }}").
+  Nenhuma edição manual é necessária: descoberta de blueprints/módulos é automática.
+
+  Próximos passos:
+    cd {{ _copier_conf.dst_path }}
+    just check-arch
+    just test
   {%- endif %}
 
 questions:
@@ -40,8 +47,17 @@ target:
   help: O que você quer gerar?
   choices:
     Um projeto novo (backend + frontend do zero): new_project
-    Um módulo dentro de um projeto já gerado por este template: new_module
+    Um módulo novo (bounded context completo): new_module
+    Uma entidade em um módulo existente: new_entity
+    Um value object em um módulo existente: new_value_object
+    Um domain service em um módulo existente: new_service
+    Um caso de uso (command/query) em um módulo existente: new_use_case
+    Um evento de domínio em um módulo existente: new_event
+    Uma exceção de domínio em um módulo existente: new_exception
+    Um repositório (para uma entidade existente) em um módulo existente: new_repository
   default: new_project
+
+# --- projeto novo -----------------------------------------------------------
 
 project_name:
   type: str
@@ -54,17 +70,6 @@ project_slug:
   help: Slug do projeto (kebab-case), usado no repositório e no docker-compose
   default: "{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
   when: "{{ target == 'new_project' }}"
-
-package_name:
-  type: str
-  help: >-
-    {{ "Nome do pacote Python (snake_case, importável)" if target == "new_project" else
-    "Nome do pacote Python do backend já existente (o mesmo respondido ao gerar o projeto)" }}
-  default: "{{ project_slug.replace('-', '_') if target == 'new_project' else '' }}"
-  validator: >-
-    {% if not package_name.isidentifier() or package_name != package_name.lower() %}
-    package_name deve ser um identificador Python válido em snake_case
-    {% endif %}
 
 project_description:
   type: str
@@ -141,26 +146,151 @@ use_github_actions:
 template_repo_url:
   type: str
   help: >-
-    URL deste template (usado pelo `just new-module` para gerar módulos futuros;
-    só precisa mudar se você fizer um fork do template)
+    URL deste template (usado pelos comandos `just new-*` para gerar módulos/artefatos
+    futuros; só precisa mudar se você fizer um fork do template)
   default: https://github.com/jack2018775/python-react-template-project.git
   when: "{{ target == 'new_project' }}"
 
+# --- comum a todos os geradores (exceto novo projeto) -----------------------
+
+package_name:
+  type: str
+  help: >-
+    {{ "Nome do pacote Python (snake_case, importável)" if target == "new_project" else
+    "Nome do pacote Python do backend já existente (o mesmo respondido ao gerar o projeto)" }}
+  default: "{{ project_slug.replace('-', '_') if target == 'new_project' else '' }}"
+  validator: >-
+    {% if not package_name.isidentifier() or package_name != package_name.lower() %}
+    package_name deve ser um identificador Python válido em snake_case
+    {% endif %}
+
 module_name:
   type: str
-  help: Nome do módulo/domínio a criar (snake_case), ex. financeiro, fiscal, comercial
-  when: "{{ target == 'new_module' }}"
+  help: Nome do módulo/domínio (snake_case), ex. financeiro, fiscal, comercial
+  when: "{{ target != 'new_project' }}"
   validator: >-
-    {% if not module_name.isidentifier() or module_name != module_name.lower() %}
+    {% if target != 'new_project' and (not module_name.isidentifier() or module_name != module_name.lower()) %}
     module_name deve ser um identificador Python válido em snake_case
     {% endif %}
 
+# --- new_module / new_entity / new_repository (entidade principal) ---------
+
 entity_name:
   type: str
-  help: Nome da entidade principal do módulo (PascalCase), ex. Lancamento, NotaFiscal, Pedido
+  help: Nome da entidade (PascalCase), ex. Lancamento, NotaFiscal, Pedido
   default: "{{ (module_name.split('_') | map('capitalize') | join('')) if target == 'new_module' else '' }}"
-  when: "{{ target == 'new_module' }}"
+  when: "{{ target in ['new_module', 'new_entity', 'new_repository'] }}"
   validator: >-
-    {% if not entity_name.isidentifier() or not entity_name[0].isupper() %}
+    {% if target in ['new_module', 'new_entity', 'new_repository'] and (not entity_name.isidentifier() or not entity_name[0].isupper()) %}
     entity_name deve ser um identificador Python válido em PascalCase
     {% endif %}
+
+# --- new_value_object --------------------------------------------------------
+
+value_object_name:
+  type: str
+  help: Nome do value object (PascalCase), ex. Cpf, Endereco, Dinheiro
+  when: "{{ target == 'new_value_object' }}"
+  validator: >-
+    {% if target == 'new_value_object' and (not value_object_name.isidentifier() or not value_object_name[0].isupper()) %}
+    value_object_name deve ser um identificador Python válido em PascalCase
+    {% endif %}
+
+# --- new_service --------------------------------------------------------------
+
+service_name:
+  type: str
+  help: Nome do domain service (PascalCase), ex. CalculadoraDeImposto, GeradorDeBoleto
+  when: "{{ target == 'new_service' }}"
+  validator: >-
+    {% if target == 'new_service' and (not service_name.isidentifier() or not service_name[0].isupper()) %}
+    service_name deve ser um identificador Python válido em PascalCase
+    {% endif %}
+
+# --- new_use_case ---------------------------------------------------------------
+
+use_case_name:
+  type: str
+  help: Nome do caso de uso (PascalCase), ex. AprovarPagamento, CancelarPedido
+  when: "{{ target == 'new_use_case' }}"
+  validator: >-
+    {% if target == 'new_use_case' and (not use_case_name.isidentifier() or not use_case_name[0].isupper()) %}
+    use_case_name deve ser um identificador Python válido em PascalCase
+    {% endif %}
+
+use_case_kind:
+  type: str
+  help: O caso de uso escreve (command) ou só lê (query)?
+  choices:
+    - command
+    - query
+  default: command
+  when: "{{ target == 'new_use_case' }}"
+
+# --- new_event ------------------------------------------------------------------
+
+event_name:
+  type: str
+  help: Nome do evento de domínio (PascalCase), ex. PedidoCriado, PagamentoAprovado
+  when: "{{ target == 'new_event' }}"
+  validator: >-
+    {% if target == 'new_event' and (not event_name.isidentifier() or not event_name[0].isupper()) %}
+    event_name deve ser um identificador Python válido em PascalCase
+    {% endif %}
+
+# --- new_exception --------------------------------------------------------------
+
+exception_name:
+  type: str
+  help: Nome da exceção de domínio (PascalCase, sem o sufixo "Error"), ex. SaldoInsuficiente
+  when: "{{ target == 'new_exception' }}"
+  validator: >-
+    {% if target == 'new_exception' and (not exception_name.isidentifier() or not exception_name[0].isupper()) %}
+    exception_name deve ser um identificador Python válido em PascalCase
+    {% endif %}
+
+# --- slugs (snake_case) computados a partir dos nomes PascalCase acima, usados nos
+# nomes de arquivo — nunca perguntados ao usuário. Windows não aceita "|" (o filtro
+# Jinja) em nomes de arquivo, por isso o valor já vem pronto como uma pergunta oculta.
+
+entity_slug:
+  type: str
+  when: false
+  default: >-
+    {{ (entity_name | regex_replace('(?<!^)(?=[A-Z])', '_') | lower)
+    if target in ['new_module', 'new_entity', 'new_repository'] else '' }}
+
+value_object_slug:
+  type: str
+  when: false
+  default: >-
+    {{ (value_object_name | regex_replace('(?<!^)(?=[A-Z])', '_') | lower)
+    if target == 'new_value_object' else '' }}
+
+service_slug:
+  type: str
+  when: false
+  default: >-
+    {{ (service_name | regex_replace('(?<!^)(?=[A-Z])', '_') | lower)
+    if target == 'new_service' else '' }}
+
+use_case_slug:
+  type: str
+  when: false
+  default: >-
+    {{ (use_case_name | regex_replace('(?<!^)(?=[A-Z])', '_') | lower)
+    if target == 'new_use_case' else '' }}
+
+event_slug:
+  type: str
+  when: false
+  default: >-
+    {{ (event_name | regex_replace('(?<!^)(?=[A-Z])', '_') | lower)
+    if target == 'new_event' else '' }}
+
+exception_slug:
+  type: str
+  when: false
+  default: >-
+    {{ (exception_name | regex_replace('(?<!^)(?=[A-Z])', '_') | lower)
+    if target == 'new_exception' else '' }}

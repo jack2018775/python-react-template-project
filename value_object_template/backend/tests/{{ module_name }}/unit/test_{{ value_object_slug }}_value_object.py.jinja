@@ -1,0 +1,6 @@
+from {{ package_name }}.{{ module_name }}.domain.value_objects.{{ value_object_slug }} import {{ value_object_name }}
+
+
+def test_{{ value_object_slug }}_equality_is_by_value() -> None:
+    assert {{ value_object_name }}(value="x") == {{ value_object_name }}(value="x")
+    assert {{ value_object_name }}(value="x") != {{ value_object_name }}(value="y")

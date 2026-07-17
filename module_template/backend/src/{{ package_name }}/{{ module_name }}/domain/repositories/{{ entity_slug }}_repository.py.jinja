@@ -1,7 +1,7 @@
 from typing import Protocol
 from uuid import UUID
 
-from ..entities import {{ entity_name }}
+from {{ package_name }}.{{ module_name }}.domain.entities.{{ entity_slug }} import {{ entity_name }}
 
 
 class {{ entity_name }}Repository(Protocol):
